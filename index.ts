@@ -1,30 +1,33 @@
 import { Connection, Keypair, SystemProgram, LAMPORTS_PER_SOL, TransactionMessage } from '@solana/web3.js';
-import { airdrop } from 'functions';
-import * as multisig from "@sqds/multisig";
+import { airdrop } from './functions';
+import * as multisig from '@sqds/multisig';
 
 console.log(multisig.PROGRAM_ADDRESS);
-const connection = new Connection("http://localhost:8899", "confirmed");
+const connection = new Connection('http://localhost:8899', 'confirmed');
 
 const createKey = Keypair.generate();
 const creator = Keypair.generate();
 const secondMember = Keypair.generate();
 
 const [multisigPda] = multisig.getMultisigPda({
-    createKey: createKey.publicKey,
+	createKey: createKey.publicKey,
 });
 const [programConfigPda] = multisig.getProgramConfigPda({});
 
-const members = [{
-        key: creator.publicKey,
-        permissions: multisig.types.Permissions.all(),
-    },
-    {
-        key: secondMember.publicKey,
-        permissions: multisig.types.Permissions.fromPermissions([multisig.types.Permission.Vote]),
-    },
+const members = [
+	{
+		key: creator.publicKey,
+		permissions: multisig.types.Permissions.all(),
+	},
+	{
+		key: secondMember.publicKey,
+		permissions: multisig.types.Permissions.fromPermissions([
+			multisig.types.Permission.Vote,
+		]),
+	},
 ];
 
-const createMultisig = async(members: multisig.types.Member[]) => {
+const createMultisig = async (members: multisig.types.Member[]) => {
     console.log("programConfigPda : ", programConfigPda.toBase58());
 
     const programConfig = await multisig.accounts.ProgramConfig.fromAccountAddress(
@@ -49,7 +52,7 @@ const createMultisig = async(members: multisig.types.Member[]) => {
     console.log("Multisig created: ", signature);
 };
 
-const transactionProposal = async() => {
+const transactionProposal = async () => {
 
     const [vaultPda, vaultBump] = multisig.getVaultPda({
         multisigPda,
@@ -95,9 +98,9 @@ const transactionProposal = async() => {
     console.log("Transaction proposal created: ", signature2);
 }
 
-const approveTransaction = async() => {
+const approveTransaction = async () => {
     const transactionIndex = 1n;
-    const firstApprove =  await multisig.rpc.proposalApprove({
+    const firstApprove = await multisig.rpc.proposalApprove({
         connection,
         feePayer: creator,
         multisigPda,
@@ -108,7 +111,7 @@ const approveTransaction = async() => {
     console.log("First transaction approve : ", firstApprove);
 
 
-     const secondApprove = await multisig.rpc.proposalApprove({
+    const secondApprove = await multisig.rpc.proposalApprove({
         connection,
         feePayer: creator,
         multisigPda,
@@ -119,7 +122,7 @@ const approveTransaction = async() => {
     console.log("Second transaction approve : ", secondApprove);
 }
 
-const executeProposal = async() => {
+const executeProposal = async () => {
     const transactionIndex = 1n;
     const [proposalPda] = multisig.getProposalPda({
         multisigPda,
@@ -141,7 +144,7 @@ const executeProposal = async() => {
     console.log("creator balance after execution : ", (await connection.getBalance(creator.publicKey, "confirmed")));
 }
 
-const main = async() => {
+const main = async () => {
     await airdrop(connection, creator.publicKey, 10 * LAMPORTS_PER_SOL);
     await airdrop(connection, secondMember.publicKey, 10 * LAMPORTS_PER_SOL);
     await createMultisig(members);

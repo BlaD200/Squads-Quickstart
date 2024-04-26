@@ -1,4 +1,4 @@
-import {Connection, PublicKey} from "@solana/web3.js";
+import { Connection, PublicKey } from '@solana/web3.js';
 
 // devnet airdrop
 export const airdrop = async (connection: Connection, address: PublicKey, amount: number) => {
